@@ -92,9 +92,14 @@ export type SimulationFormData = Record<
   (typeof simulationFormSteps)[number]['id'],
   string
 >
-
+export type ChatMessage ={
+  id: string
+  from: 'user' | 'ia'
+  text: string
+}
 export type SimulationRecord = SimulationFormData & {
   id: string
   createdAt: string
   insight?: InsightData
+  conversation?: ChatMessage[]
 }

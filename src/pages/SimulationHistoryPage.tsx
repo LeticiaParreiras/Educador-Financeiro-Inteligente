@@ -25,6 +25,7 @@ console.log(data)
             subtitle="Acompanhe o histórico de seus planos financeiros."
          />
          <div className="flex flex-col gap-4">
+            {data.length==0 && <h3 className='text-center text-muted-foreground mb-8 text-m'>Nenhuma simulação realizada</h3>}
             {data.map((simulation) => (
                <CardHistory
                   key={simulation.id}

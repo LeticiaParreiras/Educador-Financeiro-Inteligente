@@ -1,7 +1,7 @@
 import { parseCurrency } from '@/utils/currency'
 import { calcMonthlySavings } from '@/utils/simulation'
 
-import type { SimulationRecord } from './simulation'
+import type { ChatMessage, SimulationRecord } from './simulation'
 
 const RESPONSE_SCHEMA = `{
   "feasibility": {
@@ -63,4 +63,60 @@ export function buildAIPrompt(simulation: SimulationRecord) {
       - "viable": saldo após reserva para a meta é maior ou igual a 0
       - "needs_adjustment": saldo negativo de até 20% do valor da economia mensal necessária
       - "unfeasible": saldo negativo superior a 20% do valor da economia mensal necessária`
+}
+
+export function buildConversationPrompt(
+  simulation: SimulationRecord,
+  conversation: ChatMessage[],
+  question: string,
+) {
+  const monthlySavings = calcMonthlySavings(simulation)
+
+  const history =
+    conversation.length > 0
+      ? conversation
+          .map(
+            (message) =>
+              `${message.from === 'user' ? 'Usuário' : 'Educador Financeiro'}: ${message.text}`,
+          )
+          .join('\n')
+      : 'Nenhuma conversa anterior.'
+
+  return `
+Você é um educador financeiro especializado em finanças pessoais.
+
+Responda à pergunta do usuário usando os dados da simulação e o histórico da conversa. Seja claro, didático, objetivo e responda em português do Brasil.
+
+Dados da simulação:
+- Renda mensal: ${simulation.income}
+- Custos fixos: ${simulation.expenses}
+- Dívidas e parcelas: ${simulation.debts}
+- Valor disponível mensalmente: R$ ${monthlySavings.toLocaleString('pt-BR', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}
+- Meta: ${simulation.goalName}
+- Valor da meta: ${simulation.goalAmount}
+- Prazo: ${simulation.goalDeadline} meses
+
+Histórico da conversa:
+${history}
+
+Nova pergunta do usuário:
+${question}
+
+Regras:
+- Responda somente à nova pergunta.
+- Considere o histórico para manter o contexto.
+- Não invente dados que não estejam disponíveis.
+- Explique termos financeiros de maneira simples.
+- Quando necessário, use os valores da simulação nos cálculos.
+- Não retorne JSON.
+- Não use blocos de código.
+- Responda apenas com o texto que será exibido ao usuário.
+- Responda em texto simples.
+- Nunca use asteriscos (*), crases , hashtags (#), sublinhado (_) ou qualquer sintaxe Markdown.
+- Não use negrito, itálico, listas com marcadores ou títulos.
+- Use apenas parágrafos curtos e texto normal.
+`
 }
